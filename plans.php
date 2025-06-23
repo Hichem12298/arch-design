@@ -50,13 +50,19 @@ if (isset($_GET['logout'])) {
         echo '<div class="plan-card" style="border:1px solid #ccc;border-radius:8px;padding:1rem;margin-bottom:1rem;box-shadow:0 0 5px rgba(0,0,0,0.1);">';
         echo '<h3>📝 Plan '.($i+1).'</h3>';
         echo '<p><strong>Description :</strong> '.htmlspecialchars($plan['desc'] ?? $plan['description']).'</p>';
+        // Affichage image si image, sinon message pour PDF
+        if (!empty($plan['file'])) {
+          $ext = strtolower(pathinfo($plan['file'], PATHINFO_EXTENSION));
+          if (in_array($ext, ['jpg','jpeg','png','gif'])) {
+            echo '<img src="'.htmlspecialchars($plan['file']).'" alt="Plan '.($i+1).'" style="max-width:100%;margin-top:10px;"/>';
+          } elseif ($isAdmin && $ext === 'pdf') {
+            echo '<embed src="'.htmlspecialchars($plan['file']).'" type="application/pdf" width="100%" height="400px"/>';
+          } elseif (!$isAdmin && $ext === 'pdf') {
+            echo '<p style="color:#888;font-size:0.95em;">Aperçu PDF non disponible en mode public.</p>';
+          }
+        }
         if ($isAdmin) {
           echo '<p><strong>Ajouté le :</strong> '.($plan['date'] ?? '').'</p>';
-          if (!empty($plan['file']) && preg_match('/\\.(pdf)$/i', $plan['file'])) {
-            echo '<embed src="'.htmlspecialchars($plan['file']).'" type="application/pdf" width="100%" height="400px"/>';
-          } elseif (!empty($plan['file'])) {
-            echo '<img src="'.htmlspecialchars($plan['file']).'" alt="Plan '.($i+1).'" style="max-width:100%;margin-top:10px;"/>';
-          }
           echo '<form method="post" action="delete_plan.php" style="margin-top:8px;"><input type="hidden" name="index" value="'.$i.'"><button type="submit" style="background:#d32f2f;color:#fff;border:none;padding:5px 12px;border-radius:4px;cursor:pointer;">Supprimer</button></form>';
         } else {
           echo '<p style="color:#d32f2f;"><em>Pour obtenir ce plan, contactez : <a href="mailto:azizhicham136@gmail.com">azizhicham136@gmail.com</a></em></p>';
