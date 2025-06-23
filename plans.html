@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Plans Enregistrés</title>
+  <style>
+    body { font-family: Arial; margin: 20px; }
+    .plan-card {
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+    .plan-card img, .plan-card embed {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin-top: 10px;
+    }
+    .admin-badge { color: #fff; background: #1a73e8; border-radius: 4px; padding: 2px 8px; font-size: 0.9em; margin-left: 8px; }
+  </style>
+</head>
+<body>
+  <h1>📁 Plans Enregistrés <span id="adminBadge"></span></h1>
+  <div id="plansContainer"></div>
+  <a href="index.html" style="text-decoration:underline;color:#1a73e8;">← Retour</a>
+  <a href="login.html" id="logoutBtn" style="float:right;text-decoration:underline;color:#d32f2f;display:none;">Déconnexion</a>
+  <script>
+    const container = document.getElementById('plansContainer');
+    const isAdmin = localStorage.getItem('isAdmin') === '1';
+    const plans = JSON.parse(localStorage.getItem('plans')) || [];
+    const adminBadge = document.getElementById('adminBadge');
+    const logoutBtn = document.getElementById('logoutBtn');
+    if(isAdmin) {
+      adminBadge.textContent = '(admin)';
+      logoutBtn.style.display = 'inline-block';
+      logoutBtn.onclick = function() {
+        localStorage.removeItem('isAdmin');
+        window.location.href = 'login.html';
+      };
+    }
+    if (plans.length === 0) {
+      container.innerHTML = "<p>Aucun plan enregistré.</p>";
+    } else {
+      plans.forEach((plan, index) => {
+        const div = document.createElement('div');
+        div.className = "plan-card";
+        if(isAdmin) {
+          div.innerHTML = `
+            <h3>📝 Plan ${index + 1}</h3>
+            <p><strong>Description :</strong> ${plan.description || plan.desc}</p>
+            <p><strong>Ajouté le :</strong> ${plan.date || ''}</p>
+            ${plan.fileData ? (plan.fileName.endsWith('.pdf') ? `<embed src="${plan.fileData}" type="application/pdf" width="100%" height="400px"/>` : `<img src="${plan.fileData}" alt="Plan ${index + 1}"/>`) : ''}
+            <button onclick="deletePlan(${index})" style="background:#d32f2f;color:#fff;border:none;padding:5px 12px;border-radius:4px;cursor:pointer;margin-top:8px;">Supprimer</button>
+          `;
+        } else {
+          div.innerHTML = `
+            <h3>📝 Plan ${index + 1}</h3>
+            <p><strong>Description :</strong> ${plan.description || plan.desc}</p>
+            <p style="color:#d32f2f;"><em>Pour obtenir ce plan, contactez : <a href='mailto:azizhicham136@gmail.com'>azizhicham136@gmail.com</a></em></p>
+          `;
+        }
+        container.appendChild(div);
+      });
+    }
+    window.deletePlan = function(index) {
+      if(!isAdmin) return;
+      if(confirm('Supprimer ce plan ?')) {
+        const plans = JSON.parse(localStorage.getItem('plans')) || [];
+        plans.splice(index, 1);
+        localStorage.setItem('plans', JSON.stringify(plans));
+        location.reload();
+      }
+    }
+    // Redirige les non-admins vers login.html s'ils tentent d'accéder à la vue admin
+    if(!isAdmin && window.location.search.includes('admin')) {
+      window.location.href = 'login.html';
+    }
+  </script>
+</body>
+</html>
