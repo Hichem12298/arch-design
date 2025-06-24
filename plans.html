@@ -1,11 +1,58 @@
-<!-- Redirection automatique vers plans.php -->
+<!-- Affichage dynamique des plans via fetch sur plans.php -->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta http-equiv="refresh" content="0;url=plans.php">
-  <title>Redirection...</title>
+  <meta charset="UTF-8">
+  <title>Plans Enregistrés</title>
+  <style>
+    body { font-family: Arial; margin: 20px; }
+    .plan-card {
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+    .plan-card img, .plan-card embed {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin-top: 10px;
+    }
+  </style>
 </head>
 <body>
-  <p>Redirection vers <a href="plans.php">plans.php</a>...</p>
+  <h1>📁 Plans Enregistrés</h1>
+  <div id="plansContainer"></div>
+  <a href="index.html" style="text-decoration:underline;color:#1a73e8;">← Retour</a>
+  <script>
+    fetch('plans.php?api=1')
+      .then(r => r.json())
+      .then(plans => {
+        const container = document.getElementById('plansContainer');
+        if (!plans.length) {
+          container.innerHTML = '<p>Aucun plan enregistré.</p>';
+        } else {
+          plans.reverse().forEach((plan, i) => {
+            const div = document.createElement('div');
+            div.className = 'plan-card';
+            // Affiche image si image, sinon message pour PDF
+            let fileHtml = '';
+            if (plan.file && ['jpg','jpeg','png','gif'].includes((plan.file.split('.').pop()||'').toLowerCase())) {
+              fileHtml = `<img src="${plan.file}" alt="Plan ${i+1}"/>`;
+            } else if (plan.file && plan.file.endsWith('.pdf')) {
+              fileHtml = `<p style='color:#888;font-size:0.95em;'>Aperçu PDF non disponible en mode public.</p>`;
+            }
+            div.innerHTML = `
+              <h3>📝 Plan ${i + 1}</h3>
+              <p><strong>Description :</strong> ${plan.desc || plan.description}</p>
+              ${fileHtml}
+              <p style='color:#d32f2f;'><em>Pour obtenir ce plan, contactez : <a href='mailto:azizhicham136@gmail.com'>azizhicham136@gmail.com</a></em></p>
+            `;
+            container.appendChild(div);
+          });
+        }
+      });
+  </script>
 </body>
 </html>

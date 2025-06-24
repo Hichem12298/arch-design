@@ -17,6 +17,13 @@ if (isset($_GET['logout'])) {
     header('Location: plans.php');
     exit;
 }
+if (isset($_GET['api']) && $_GET['api'] == '1') {
+    header('Content-Type: application/json');
+    $plansFile = __DIR__ . '/plans.json';
+    $plans = file_exists($plansFile) ? json_decode(file_get_contents($plansFile), true) : [];
+    echo json_encode($plans);
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="fr">
