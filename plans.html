@@ -51,12 +51,15 @@
         ];
         let plans = JSON.parse(localStorage.getItem('plans') || 'null');
         if (!Array.isArray(plans)) plans = [];
-        // Ajoute les plans par défaut si aucun plan n'est déjà stocké
-        if (plans.length === 0) {
-          plans = defaultPlans;
-          savePlans(plans);
-        }
-        return plans;
+        // Toujours afficher les plans par défaut + les plans ajoutés
+        const merged = [...defaultPlans];
+        // Ajoute les plans utilisateur qui ne sont pas déjà dans defaultPlans (par description et fileDataUrl)
+        plans.forEach(userPlan => {
+          if (!merged.some(p => p.description === userPlan.description && p.fileDataUrl === userPlan.fileDataUrl)) {
+            merged.push(userPlan);
+          }
+        });
+        return merged;
       } catch (e) {
         return [];
       }
