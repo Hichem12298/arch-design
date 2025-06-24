@@ -1,61 +1,71 @@
 <?php
-session_start();
-$isAdmin = isset($_SESSION['admin']) && $_SESSION['admin'] === true;
+include 'db.php';
 
-// Authentification simple
-if (isset($_POST['login'])) {
-    if ($_POST['email'] === 'admin.aziz@gmail.com' && $_POST['password'] === '123') {
-        $_SESSION['admin'] = true;
-        header('Location: plans.php');
-        exit;
+// Ajout de plan via formulaire (POST)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['description']) && isset($_FILES['plan'])) {
+    $uploadDir = 'uploads/';
+    if (!is_dir($uploadDir)) mkdir($uploadDir);
+    $fileName = uniqid('plan_') . '.' . pathinfo($_FILES['plan']['name'], PATHINFO_EXTENSION);
+    $filePath = $uploadDir . $fileName;
+    if (move_uploaded_file($_FILES['plan']['tmp_name'], $filePath)) {
+        $desc = $conn->real_escape_string($_POST['description']);
+        $file = $conn->real_escape_string($filePath); // Stocke le chemin complet
+        $sql = "INSERT INTO plans (description, file) VALUES ('$desc', '$file')";
+        if ($conn->query($sql)) {
+            $success = 'Plan ajouté avec succès !';
+        } else {
+            $error = 'Erreur SQL : ' . $conn->error;
+        }
     } else {
-        $error = "Identifiants incorrects";
+        $error = "Erreur lors de l'upload du fichier.";
     }
 }
-if (isset($_GET['logout'])) {
-    session_destroy();
-    header('Location: plans.php');
-    exit;
-}
+
+$result = $conn->query("SELECT * FROM plans ORDER BY date DESC");
 ?>
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
   <title>Plans enregistrés</title>
-  <link rel="stylesheet" href="style.css">
+  <style>
+    .plan {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin: 10px 0;
+    }
+  </style>
 </head>
 <body>
-  <h1>📁 Plans enregistrés <?php if($isAdmin) echo '<span style="color:#fff;background:#1a73e8;border-radius:4px;padding:2px 8px;font-size:0.9em;">admin</span>'; ?></h1>
-  <?php if(!$isAdmin): ?>
-    <form method="post" style="margin-bottom:2rem;">
-      <label>Email admin : <input type="email" name="email" required></label>
-      <label>Mot de passe : <input type="password" name="password" required></label>
-      <button type="submit" name="login">Connexion admin</button>
-      <?php if(isset($error)) echo '<div style="color:#d32f2f;">'.$error.'</div>'; ?>
-    </form>
+  <h1>📁 Liste des plans</h1>
+  <a href="ajout_plan.html">➕ Ajouter un nouveau plan</a>
+  <hr>
+  <form method="post" enctype="multipart/form-data" style="margin-bottom:2rem;">
+    <label>Description : <input type="text" name="description" required></label>
+    <label>Fichier : <input type="file" name="plan" accept=".jpg,.jpeg,.png,.gif,.pdf" required></label>
+    <button type="submit">Ajouter un plan</button>
+    <?php if(isset($success)) echo '<div style="color:green;">'.$success.'</div>'; ?>
+    <?php if(isset($error)) echo '<div style="color:#d32f2f;">'.$error.'</div>'; ?>
+  </form>
+
+  <?php if ($result && $result->num_rows > 0): ?>
+    <?php while ($row = $result->fetch_assoc()): ?>
+      <div class="plan">
+        <p><strong>Description :</strong> <?= htmlspecialchars($row['description']) ?></p>
+        <p><strong>Date :</strong> <?= $row['date'] ?></p>
+        <?php if (str_ends_with(strtolower($row['file']), '.pdf')): ?>
+          <embed src="<?= $row['file'] ?>" type="application/pdf" width="100%" height="300px">
+        <?php else: ?>
+          <img src="<?= $row['file'] ?>" alt="plan" width="300">
+        <?php endif; ?>
+      </div>
+    <?php endwhile; ?>
   <?php else: ?>
-    <a href="plans.php?logout=1" style="float:right;text-decoration:underline;color:#d32f2f;">Déconnexion</a>
+    <p>Aucun plan enregistré.</p>
   <?php endif; ?>
 
-  <div style="clear:both"></div>
-  <div>
-    <?php
-    $plansFile = __DIR__ . '/plans.json';
-    $plans = file_exists($plansFile) ? json_decode(file_get_contents($plansFile), true) : [];
-    if (empty($plans)) {
-      echo "<p>Aucun plan enregistré.</p>";
-    } else {
-      foreach (array_reverse($plans) as $i => $plan) {
-        echo '<div class="plan-card" style="border:1px solid #ccc;border-radius:8px;padding:1rem;margin-bottom:1rem;box-shadow:0 0 5px rgba(0,0,0,0.1);">';
-        echo '<h3>📝 Plan '.($i+1).'</h3>';
-        echo '<p><strong>Description :</strong> '.htmlspecialchars($plan['desc'] ?? $plan['description']).'</p>';
-        // Ne pas afficher ni image ni PDF, juste la description
-        echo '</div>';
-      }
-    }
-    ?>
-  </div>
-  <a href="index.html" style="text-decoration:underline;color:#1a73e8;">← Retour</a>
 </body>
 </html>
+
+<?php $conn->close(); ?>
