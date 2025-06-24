@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const form = document.getElementById('planForm');
   const message = document.getElementById('planMessage');
 
-  form.addEventListener('submit', function (e) {
+  form.addEventListener('submit', async function (e) {
     e.preventDefault();
 
     const fileInput = document.getElementById('planFile');
@@ -14,27 +14,24 @@ document.addEventListener('DOMContentLoaded', function () {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = function (event) {
-      const dataUrl = event.target.result;
+    const formData = new FormData();
+    formData.append('description', desc);
+    formData.append('plan', file);
 
-      // Création d'un objet plan
-      const plan = {
-        description: desc,
-        fileName: file.name,
-        fileData: dataUrl,
-        date: new Date().toLocaleString()
-      };
-
-      // Sauvegarde dans localStorage
-      let plans = JSON.parse(localStorage.getItem('plans')) || [];
-      plans.push(plan);
-      localStorage.setItem('plans', JSON.stringify(plans));
-
-      message.textContent = "✅ Plan ajouté avec succès !";
-      form.reset();
-    };
-
-    reader.readAsDataURL(file); // Encode le fichier en base64
+    try {
+      const res = await fetch('plans.php', {
+        method: 'POST',
+        body: formData
+      });
+      const text = await res.text();
+      if (text.includes('succès')) {
+        message.textContent = "✅ Plan ajouté avec succès !";
+        form.reset();
+      } else {
+        message.textContent = text;
+      }
+    } catch (err) {
+      message.textContent = "Erreur réseau ou serveur.";
+    }
   });
 });

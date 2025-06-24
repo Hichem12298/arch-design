@@ -37,15 +37,12 @@
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
       if(email === 'admin.aziz@gmail.com' && password === '123') {
-        localStorage.setItem('isAdmin', '1');
         window.location.href = 'plans.html';
       } else {
-        localStorage.removeItem('isAdmin');
         window.location.href = 'plans.html';
       }
     };
     document.getElementById('publicBtn').onclick = function() {
-      localStorage.removeItem('isAdmin');
       window.location.href = 'plans.html';
     };
   </script>
