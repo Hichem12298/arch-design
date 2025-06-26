@@ -3,14 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>arch design</title>
+  <title>معلومات لازمة لمناقشة المشروع المبتكر</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header>
-    <h1>plans architecture</h1>
+    <h1>معلومات لازمة لمناقشة المشروع المبتكر</h1>
   </header>
   <main>
+    
     <section id="contact">
       <h2>Contact</h2>
       <p>Pour toute demande, contactez-moi directement par email :
@@ -18,11 +19,35 @@
       </p>
     </section>
     <!-- Section d'ajout de plan architectural -->
-    <section style="margin:2rem 0;">
-      <a href="plans.html" style="display:inline-block;padding:1rem 2rem;background:#1a73e8;color:#fff;border-radius:8px;text-decoration:none;font-size:1.2rem;box-shadow:0 1px 4px #0001;">Voir et ajouter des plans</a>
+    <section id="add-plan" style="margin-top:2rem;">
+      <h2>Ajouter un plan architectural</h2>
+      <form id="planForm" enctype="multipart/form-data">
+        <label for="planFile">Fichier du plan (PDF, JPG, PNG) :</label>
+        <input type="file" id="planFile" name="plan" accept=".pdf,.jpg,.jpeg,.png" required>
+        <label for="planDesc">Description du plan :</label>
+        <textarea id="planDesc" name="description" rows="3" placeholder="Décrivez le plan..." required></textarea>
+        <button type="submit">Ajouter le plan</button>
+      </form>
+      <div id="planMessage"></div>
+      <a href="plans.html" style="display:inline-block;margin:1rem 0 2rem 0;color:#1a73e8;font-weight:bold;text-decoration:underline;">Voir les plans enregistrés</a>
+      <script>
+      document.getElementById('planForm').onsubmit = async function(e) {
+        e.preventDefault();
+        const form = e.target;
+        const data = new FormData(form);
+        const res = await fetch('plans.php', {
+          method: 'POST',
+          body: data
+        });
+        const text = await res.text();
+        document.getElementById('planMessage').innerHTML = text.includes('succès') ? "<span style='color:green'>Plan ajouté avec succès !</span>" : "<span style='color:red'>" + text + "</span>";
+        form.reset();
+      };
+      </script>
+      <div id="plansList" style="margin-top:2rem;"></div>
     </section>
   </main>
-  <footer style="margin-top:2rem;text-align:center;">
+  <footer>
     <p>&copy; 2025 جميع الحقوق محفوظة.</p>
   </footer>
   <script src="script.js"></script>
